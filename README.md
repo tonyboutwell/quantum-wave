@@ -1,4 +1,4 @@
-Quantum Entanglement Communication Experiment using Qiskit and Python
+Quantum Wave Communication Experiment using Qiskit and Python
 
 Overview:
 This experiment utilizes entanglement, quantum teleportation, and quantum walks to simulate instantaneous information transfer between two parties, Alice and Bob. The experiment aims to simulate instant communication without the need for a classical verification channel, while preserving the entanglement connection between Alice and Bob.
