@@ -1,4 +1,5 @@
-# Code Author: Tony Boutwell 3/30/2024 tonyboutwell@gmail.com
+# Copyright (C) 2024  Tony Boutwell  3/30/24 tonyboutwell@gmail.com
+# This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 from qiskit import QuantumCircuit, transpile, assemble
 from qiskit_aer import Aer
