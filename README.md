@@ -26,4 +26,4 @@ Bob measures the position qubits after the quantum walk.
 By comparing the measured patterns with baseline patterns, Bob can detect the phase changes applied by Alice.
 The changes in the interference patterns reflect the message encoded by Alice.
 
-It is important to note this is still in the theoretical stage and requires rigorous experimental validation. Further research and practical implementations are necessary to fully realize the potential of this approach to faster-than-light communication.
+It is important to note this works in the Qiskit simulation since it appears to not be truly random. It would require more research/access to quantum computers to test against true quantum randomness.
