@@ -1,0 +1,2 @@
+from qiskit_ibm_runtime import QiskitRuntimeService
+QiskitRuntimeService.save_account(token="3fbcb3c83df23de3d1b88087eb6136d32c8568acc4354fa3ba811ed6d64c7cd540be31ba5d9489d0e1b4046c998228058d50baf350d9aed33c7aa9b14c4008fa", channel="ibm_quantum")

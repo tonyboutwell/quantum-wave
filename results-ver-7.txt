@@ -1,0 +1,83 @@
+C:\Users\mark_\iCloudDrive\repos\Quantum\quantum-wave\quantum-wave-ver-7-brisbane.py:163: DeprecationWarning: backend.run() and related sessions methods are deprecated  as of qiskit-ibm-runtime 0.23 and will be removed no sooner than 6 months after the release date. More details can be found in the primitives migration guide https://docs.quantum.ibm.com/migration-guides/qiskit-runtime.
+  job = backend.run(transpiled, shots=shots)
+Job submitted. Job ID: cxgfy503ej4g008g5ke0
+Job completed!
+Threshold calibrated using known plaintext '42' for optimization.
+Threshold: -0.0410
+Overall Accuracy: 88.89%
+Decoded Binary: 001101000011000101000110011011110111011100100110001011000110000101110001
+Decoded Message: Fow&,aq
+
+Per-bit Analysis:
+Bit 0: Original=0, Decoded=0, Diff=-0.3040
+Bit 1: Original=0, Decoded=0, Diff=-0.4050
+Bit 2: Original=1, Decoded=1, Diff=0.1274
+Bit 3: Original=1, Decoded=1, Diff=0.1498
+Bit 4: Original=0, Decoded=0, Diff=-0.2538
+Bit 5: Original=1, Decoded=1, Diff=-0.0215
+Bit 6: Original=0, Decoded=0, Diff=-0.1731
+Bit 7: Original=0, Decoded=0, Diff=-0.3459
+Bit 8: Original=0, Decoded=0, Diff=-0.3978
+Bit 9: Original=0, Decoded=0, Diff=-0.3009
+Bit 10: Original=1, Decoded=1, Diff=-0.0049
+Bit 11: Original=1, Decoded=1, Diff=0.0338
+Bit 12: Original=0, Decoded=0, Diff=-0.4402
+Bit 13: Original=0, Decoded=0, Diff=-0.2277
+Bit 14: Original=1, Decoded=0, Diff=-0.1539
+Bit 15: Original=0, Decoded=1, Diff=0.0720
+Bit 16: Original=0, Decoded=0, Diff=-0.2625
+Bit 17: Original=1, Decoded=1, Diff=0.0995
+Bit 18: Original=0, Decoded=0, Diff=-0.1235
+Bit 19: Original=0, Decoded=0, Diff=-0.0516
+Bit 20: Original=0, Decoded=0, Diff=-0.3629
+Bit 21: Original=1, Decoded=1, Diff=0.0243
+Bit 22: Original=0, Decoded=1, Diff=0.0339
+Bit 23: Original=0, Decoded=0, Diff=-0.4553
+Bit 24: Original=0, Decoded=0, Diff=-0.4153
+Bit 25: Original=1, Decoded=1, Diff=0.1067
+Bit 26: Original=1, Decoded=1, Diff=0.1296
+Bit 27: Original=0, Decoded=0, Diff=-0.2668
+Bit 28: Original=1, Decoded=1, Diff=0.0306
+Bit 29: Original=1, Decoded=1, Diff=0.0175
+Bit 30: Original=1, Decoded=1, Diff=0.0243
+Bit 31: Original=1, Decoded=1, Diff=0.0586
+Bit 32: Original=0, Decoded=0, Diff=-0.0747
+Bit 33: Original=1, Decoded=1, Diff=0.1194
+Bit 34: Original=1, Decoded=1, Diff=0.0188
+Bit 35: Original=1, Decoded=1, Diff=0.1171
+Bit 36: Original=0, Decoded=0, Diff=-0.1866
+Bit 37: Original=1, Decoded=1, Diff=0.0250
+Bit 38: Original=0, Decoded=1, Diff=0.0649
+Bit 39: Original=1, Decoded=1, Diff=0.0228
+Bit 40: Original=0, Decoded=0, Diff=-0.2699
+Bit 41: Original=1, Decoded=0, Diff=-0.0698
+Bit 42: Original=1, Decoded=1, Diff=0.0007
+Bit 43: Original=0, Decoded=0, Diff=-0.3051
+Bit 44: Original=0, Decoded=0, Diff=-0.3528
+Bit 45: Original=1, Decoded=1, Diff=0.0211
+Bit 46: Original=1, Decoded=1, Diff=0.1315
+Bit 47: Original=1, Decoded=0, Diff=-0.0615
+Bit 48: Original=0, Decoded=0, Diff=-0.2195
+Bit 49: Original=1, Decoded=0, Diff=-0.1459
+Bit 50: Original=1, Decoded=1, Diff=0.0114
+Bit 51: Original=0, Decoded=0, Diff=-0.2106
+Bit 52: Original=1, Decoded=1, Diff=0.0166
+Bit 53: Original=1, Decoded=1, Diff=0.1281
+Bit 54: Original=0, Decoded=0, Diff=-0.1317
+Bit 55: Original=0, Decoded=0, Diff=-0.0508
+Bit 56: Original=0, Decoded=0, Diff=-0.0514
+Bit 57: Original=1, Decoded=1, Diff=0.0490
+Bit 58: Original=1, Decoded=1, Diff=0.1206
+Bit 59: Original=0, Decoded=0, Diff=-0.1364
+Bit 60: Original=0, Decoded=0, Diff=-0.1863
+Bit 61: Original=0, Decoded=0, Diff=-0.3127
+Bit 62: Original=0, Decoded=0, Diff=-0.2061
+Bit 63: Original=1, Decoded=1, Diff=0.1981
+Bit 64: Original=0, Decoded=0, Diff=-0.3706
+Bit 65: Original=1, Decoded=1, Diff=0.0120
+Bit 66: Original=1, Decoded=1, Diff=0.2338
+Bit 67: Original=1, Decoded=1, Diff=0.0509
+Bit 68: Original=0, Decoded=0, Diff=-0.2562
+Bit 69: Original=0, Decoded=0, Diff=-0.0951
+Bit 70: Original=1, Decoded=0, Diff=-0.0682
+Bit 71: Original=1, Decoded=1, Diff=0.1278
