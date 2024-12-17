@@ -4,16 +4,6 @@ import numpy as np
 from qiskit_aer import Aer, AerSimulator
 from qiskit_aer.noise import NoiseModel, depolarizing_error, amplitude_damping_error
 
-##########################################
-# Insert your IBM Quantum API Token here #
-##########################################
-# Example:
-# QiskitRuntimeService.save_account(token="3fbcb3c83df23de3d1b88087eb6136d32c8568acc4354fa3ba811ed6d64c7cd540be31ba5d9489d0e1b4046c998228058d50baf350d9aed33c7aa9b14c4008fa", channel="ibm_quantum", overwrite=True)
-#
-# After running once to save your account, you can comment this line out and just use:
-service = QiskitRuntimeService(token="3fbcb3c83df23de3d1b88087eb6136d32c8568acc4354fa3ba811ed6d64c7cd540be31ba5d9489d0e1b4046c998228058d50baf350d9aed33c7aa9b14c4008fa", channel="ibm_quantum")
-# when you want to run on hardware.
-
 def text_to_binary(text):
     return ''.join(format(ord(c), '08b') for c in text)
 
@@ -58,8 +48,8 @@ def create_quantum_walk_circuit(apply_phase, phase_angle, steps, rz_angle=0.0, r
     qc.measure(range(1, num_position_qubits+1), range(num_position_qubits))
     return qc
 
-def decode_with_threshold(bit_data, binary_message, shots=8192):
-    # Compute threshold from known plaintext '42' bits
+def decode_with_threshold(bit_data, binary_message, shots=3000):
+    # Compute threshold from known plaintext '42' bits (first 16 bits)
     known_bits_count = 16
     known_data = bit_data[:known_bits_count]
     known_binary = binary_message[:known_bits_count]
@@ -100,10 +90,15 @@ def decode_with_threshold(bit_data, binary_message, shots=8192):
     return decoded_message, overall_accuracy, ''.join(decoded_bits), threshold, diffs_per_bit
 
 if __name__ == "__main__":
-    # Uncomment and insert your token:
+    # Insert your IBM Quantum API token once and run:
     # QiskitRuntimeService.save_account(token="IBM_API_TOKEN_HERE", channel="ibm_quantum", overwrite=True)
-    # After saving once, you can comment out the above line and just use:
-    service = QiskitRuntimeService(token="IBM_API_TOKEN_HERE", channel="ibm_quantum")
+    #
+    # After the account is saved, you can comment the line above out and then just use:
+    # service = QiskitRuntimeService()
+    #
+    # When you're ready to run on hardware, set use_simulator = False and uncomment:
+    service = QiskitRuntimeService()
+    backend = service.backend("ibm_brisbane")
 
     phase_angle = 1.9921
     steps = 1
@@ -115,10 +110,34 @@ if __name__ == "__main__":
     use_noise = True      # True = Add noise model to simulator runs, False = No noise in simulation
 
     known_plaintext = "42"
-    secret_message = "Douglas"
-    full_message = known_plaintext + secret_message
-    binary_message = text_to_binary(full_message)
-    shots = 8192
+    secret_message = "Wow"
+
+    # Convert secret message to binary
+    secret_binary = text_to_binary(secret_message)
+
+    # Strategy: Start with "42", after each bit of secret_message add a known '0' bit, end with "42".
+    # This gives multiple known reference points.
+    # full pattern: 42 + [secret_bit + '0'] * len(secret_bits) + 42
+    # For example, if secret_message = "Hello", we interleave '0' after each bit.
+    # We'll have to strip these extra bits out after decoding.
+
+    # Binary of known_plaintext '42'
+    known_binary = text_to_binary(known_plaintext)
+
+    # Interleave a '0' after each secret bit
+    interleaved_bits = []
+    for b in secret_binary:
+        interleaved_bits.append(b)
+        interleaved_bits.append('0')  # control bit after each message bit
+
+    # Final binary message:
+    # Start with known_plaintext
+    # Then interleaved message bits
+    # Then end with known_plaintext again
+    enhanced_binary_message = known_binary + ''.join(interleaved_bits) + known_binary
+
+    binary_message = enhanced_binary_message
+    shots=3000
 
     if use_simulator:
         if use_noise:
@@ -141,8 +160,7 @@ if __name__ == "__main__":
             # No noise
             backend = Aer.get_backend('aer_simulator')
     else:
-        # Real quantum hardware (ibm_brisbane)
-        # After saving your account, uncomment the next two lines:
+        # For real hardware:
         service = QiskitRuntimeService(channel="ibm_quantum")
         backend = service.backend("ibm_brisbane")
         pass
@@ -184,17 +202,23 @@ if __name__ == "__main__":
         bit_data, binary_message, shots=shots
     )
 
-    # Note about using known plaintext '42' for threshold calibration
     print("Threshold calibrated using known plaintext '42' for optimization.")
 
-    # Remove the known plaintext "42" from the final displayed message
-    known_len = len(known_plaintext)
-    actual_decoded_message = decoded_message[known_len:]
+    # Now we must remove the known pattern from the decoded message:
+    # We started with: 42 + (secret_bit + '0') * each bit + 42
+    # That's known_binary at start and end. Length of known_binary = 16 bits.
+    # Remove first 16 bits and last 16 bits from decoded_binary:
+    stripped = decoded_binary[16:-16]
+
+    # Now 'stripped' is (secret_bit + '0') repeated for the entire secret message.
+    # Remove every second bit (the '0' control bit) to get the original secret bits back.
+    secret_recovered_bits = stripped[0::2]  # take every other bit starting at 0
+    actual_decoded_message = binary_to_text(secret_recovered_bits)
 
     print(f"Threshold: {threshold:.4f}")
     print(f"Overall Accuracy: {overall_accuracy*100:.2f}%")
     print("Decoded Binary:", decoded_binary)
-    print("Decoded Message:", actual_decoded_message)
+    print("Decoded Message (after removing known patterns):", actual_decoded_message)
 
     # Per-bit analysis (debugging info)
     print("\nPer-bit Analysis:")
