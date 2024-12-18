@@ -1,7 +1,6 @@
 import sys
 import subprocess
 import random
-import matplotlib.pyplot as plt
 
 def flip_bit(binary_vector, index):
     """Flip a single bit in the binary vector at the specified index."""
@@ -9,65 +8,89 @@ def flip_bit(binary_vector, index):
     flipped[index] = '1' if binary_vector[index] == '0' else '0'
     return ''.join(flipped)
 
+def extract_binary_output(output):
+    """Extract the binary vector from program output, ensuring only valid binary characters remain."""
+    for line in output.strip().split('\n'):
+        line = line.strip()
+        # Remove any labels like 'Encoded Binary Vector:'
+        if ':' in line:
+            line = line.split(':', 1)[1].strip()
+        if line and all(c in '01' for c in line):
+            return line
+    return ""
+
 def call_program(program, mode, input_value):
     """Call the specified Python program in encode (-e) or decode (-d) mode."""
     try:
         result = subprocess.run(["python", program, mode, input_value], capture_output=True, text=True)
-        # Parse the output and extract the relevant result
-        output_lines = result.stdout.strip().split('\n')
-        for line in output_lines:
-            if line and ':' not in line:
-                return line.strip()
-        return ""
+        if mode == "-e":
+            # Extract binary output for encoding mode
+            return extract_binary_output(result.stdout), result.stdout.strip()
+        else:
+            # Return the raw decoded output for decode mode
+            for line in result.stdout.strip().split('\n'):
+                if "Decoded Text String:" in line:
+                    return line.split(":", 1)[1].strip(), result.stdout.strip()
+            return "", result.stdout.strip()  # Default to empty string if not found
     except Exception as e:
         print(f"Error calling program {program}: {e}")
         sys.exit(1)
 
-def run_tests(program, text, iterations):
+def run_tests(program, text, iterations, show_modified=False):
     """Run the specified number of tests, flipping bits until errors occur."""
     print("Running tests...")
-    correct_vector = call_program(program, "-e", text)
-    if not correct_vector or not all(c in '01' for c in correct_vector):
+    correct_vector, _ = call_program(program, "-e", text)
+    if not correct_vector:
         print("Error: Encoding failed or result is not a valid binary vector.")
         sys.exit(1)
 
-    results = []
+    print(f"Correct Binary Vector: {correct_vector}")
     binary_length = len(correct_vector)
+    results = []
 
-    for _ in range(iterations):
-        test_vector = correct_vector
+    for set_number in range(iterations):
         flips = 0
+        test_vector = correct_vector  # Always reset to the correct binary vector
 
         while True:
-            # Randomly select a bit to flip
-            index = random.randint(0, binary_length - 1)
-            test_vector = flip_bit(test_vector, index)
+            # Flip one additional bit and reset test vector
+            modified_vector = flip_bit(test_vector, random.randint(0, binary_length - 1))
             flips += 1
 
             # Call the program with the modified vector to decode
-            decoded_text = call_program(program, "-d", test_vector)
+            decoded_text, raw_output = call_program(program, "-d", modified_vector)
+
+            # Show the modified vector and decoded text if -x flag is enabled
+            if show_modified:
+                print(f"Set {set_number + 1}, Flip {flips}: {modified_vector} -> Decoded: '{decoded_text}'")
 
             # Check if the decoded text matches the original
             if decoded_text != text:
                 results.append(flips)
+                print(f"Set {set_number + 1}: Error after {flips} bit flips.")
                 break
+            
+            test_vector = modified_vector  # Carry forward the last modified vector
     return results
 
-def plot_histogram(data):
-    """Plot a histogram of the results."""
-    plt.hist(data, bins=range(1, max(data) + 2), edgecolor='black', align='left')
-    plt.title("Distribution of Bit Flips Before Errors Occur")
-    plt.xlabel("Number of Bit Flips")
-    plt.ylabel("Frequency")
-    plt.show()
+def summarize_results(results):
+    """Summarize and display the count of iterations before errors occurred."""
+    summary = {}
+    for flips in results:
+        summary[flips] = summary.get(flips, 0) + 1
+
+    print("\nSummary of Results:")
+    for flips in sorted(summary.keys()):
+        print(f"{flips} iteration(s): {summary[flips]} sets")
 
 def print_usage():
     """Print the command-line usage."""
-    print("Usage: python bit_flip_tester.py -p <program> -e <text> -n <iterations>")
+    print("Usage: python bit_flip_tester.py -p <program> -e <text> -n <iterations> [-x]")
     print("Options:")
     print("  -p <program>   Name of the Python program to call (e.g., bch_tool.py)")
     print("  -e <text>      Text string to encode and decode")
     print("  -n <iterations> Number of test sets to run")
+    print("  -x             Output the modified binary vector for each iteration")
     print("  -h             Display this help message")
 
 def main():
@@ -95,9 +118,11 @@ def main():
         else:
             raise ValueError("Missing -n flag for number of iterations.")
 
-        # Run tests and plot results
-        results = run_tests(program, text, iterations)
-        plot_histogram(results)
+        show_modified = "-x" in sys.argv
+
+        # Run tests and summarize results
+        results = run_tests(program, text, iterations, show_modified)
+        summarize_results(results)
     
     except (ValueError, IndexError) as e:
         print(f"Error: {e}")

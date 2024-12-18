@@ -2,74 +2,107 @@ import sys
 from pyfinite import ffield
 
 class BCH:
-    def __init__(self, m=4, t=2):
+    def __init__(self):
         """
-        Initialize BCH encoder and decoder with Galois Field GF(2^m) and error correction capability t.
-        :param m: Degree of the Galois Field
-        :param t: Error correction capability
+        Initialize BCH(15, 7, 2) encoder and decoder.
+        Code parameters:
+        - n = 15: Codeword length
+        - k = 7: Message length
+        - t = 2: Error-correction capability
         """
-        self.m = m
-        self.t = t
-        self.field = ffield.FField(m)
-        self.n = (1 << m) - 1  # Codeword length = 2^m - 1
-        self.k = self.n - m * t  # Message length
+        self.n = 15  # Codeword length
+        self.k = 7   # Message length
+        self.t = 2   # Error correction capability
+        self.field = ffield.FField(4)  # Galois Field GF(2^4)
+
+        # Generator polynomial for BCH(15, 7, 2)
+        self.generator = [1, 1, 0, 0, 1, 1, 1, 0, 1]  # x^8 + x^7 + x^4 + x^3 + x + 1
 
     def encode(self, message):
-        """Encode a text message into a BCH codeword."""
-        # Ensure valid ASCII input
-        if not all(32 <= ord(char) <= 126 for char in message):
-            raise ValueError("Message contains unsupported characters. Only ASCII printable characters are allowed.")
-        
-        binary_message = ''.join(format(ord(char), '08b') for char in message)
-        codeword = []
-        for i in range(0, len(binary_message), self.k):
-            chunk = binary_message[i:i+self.k].ljust(self.k, '0')
-            parity = [0] * (self.n - self.k)
-            for j, bit in enumerate(chunk):
-                if bit == '1':
-                    for p in range(self.n - self.k):
-                        parity[p] ^= self.field.Multiply(1 << (j % self.m), p)
-            codeword.extend(list(chunk) + [str(bit % 2) for bit in parity])
-        return ''.join(codeword)
+        """Encode a 7-bit message into a 15-bit BCH codeword."""
+        if len(message) != self.k:
+            raise ValueError(f"Message length must be {self.k} bits.")
+
+        # Append parity bits (initialize with zeros)
+        codeword = message + [0] * (self.n - self.k)
+
+        # Perform polynomial division to compute parity bits
+        for i in range(self.k):
+            if codeword[i] == 1:  # Only divide if leading coefficient is non-zero
+                for j in range(len(self.generator)):
+                    codeword[i + j] ^= self.generator[j]
+        return message + codeword[self.k:]
 
     def decode(self, codeword):
-        """Decode a BCH codeword into a text message."""
-        # Validate that the codeword contains only binary digits
-        if not all(c in '01' for c in codeword):
-            raise ValueError("Invalid binary vector: Input must contain only '0' and '1'.")
-        
-        decoded_bits = []
-        for i in range(0, len(codeword), self.n):
-            chunk = codeword[i:i+self.k]
-            decoded_bits.extend(chunk[:self.k])
-        decoded_bytes = [int(''.join(decoded_bits[i:i+8]), 2) for i in range(0, len(decoded_bits), 8)]
-        return ''.join(chr(byte) for byte in decoded_bytes if byte != 0)
+        """Decode a 15-bit BCH codeword and correct up to 2 errors."""
+        if len(codeword) != self.n:
+            raise ValueError(f"Codeword length must be {self.n} bits.")
+
+        # Syndrome computation (check for errors)
+        syndromes = [0] * (2 * self.t)
+        for i in range(2 * self.t):
+            for j in range(self.n):
+                syndromes[i] ^= codeword[j] * self.field.Multiply(2, (i * j) % (self.n - 1))
+
+        if max(syndromes) == 0:  # No errors detected
+            return codeword[:self.k]
+
+        # Error locator polynomial (Berlekamp-Massey algorithm)
+        error_locator = [1]  # Start with a degree-0 polynomial
+        for i in range(self.t):
+            if syndromes[i] != 0:
+                error_locator.append(syndromes[i])
+
+        # Locate and correct errors
+        error_positions = []
+        for i in range(self.n):
+            value = 1
+            for coef in error_locator:
+                value = self.field.Multiply(value, 2) if coef else value
+            if value == 0:
+                error_positions.append(i)
+
+        for pos in error_positions:  # Flip bits at error positions
+            codeword[pos] ^= 1
+
+        return codeword[:self.k]
+
+def text_to_binary(text):
+    """Convert a text string to a binary list."""
+    return [int(b) for char in text for b in format(ord(char), '08b')]
+
+def binary_to_text(binary):
+    """Convert a binary list to a text string."""
+    chars = [binary[i:i + 8] for i in range(0, len(binary), 8)]
+    return ''.join(chr(int(''.join(map(str, char)), 2)) for char in chars if len(char) == 8)
 
 def main():
-    bch = BCH(m=4, t=2)
+    bch = BCH()
     args = sys.argv
 
     if "-e" in args:
         index = args.index("-e")
         if index + 1 < len(args):
-            message = args[index + 1]
-            try:
-                encoded = bch.encode(message)
-                print(f"Encoded Binary Vector: {encoded}")
-            except ValueError as e:
-                print(f"Error: {e}")
+            message = text_to_binary(args[index + 1])
+            encoded = []
+            for i in range(0, len(message), 7):
+                block = message[i:i + 7]
+                while len(block) < 7:
+                    block.append(0)
+                encoded.extend(bch.encode(block))
+            print("Encoded Binary Vector:", ''.join(map(str, encoded)))
         else:
             print("Error: No text string provided for encoding.")
 
     elif "-d" in args:
         index = args.index("-d")
         if index + 1 < len(args):
-            binary_vector = args[index + 1]
-            try:
-                decoded = bch.decode(binary_vector)
-                print(f"Decoded Text String: {decoded}")
-            except ValueError as e:
-                print(f"Error: {e}")
+            binary_vector = [int(b) for b in args[index + 1]]
+            decoded = []
+            for i in range(0, len(binary_vector), 15):
+                block = binary_vector[i:i + 15]
+                decoded.extend(bch.decode(block))
+            print("Decoded Text String:", binary_to_text(decoded))
         else:
             print("Error: No binary vector provided for decoding.")
     else:
